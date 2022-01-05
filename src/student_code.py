@@ -161,10 +161,11 @@ while client.is_running() == 'true':
     for p in pokemonsss["Pokemons"]:
         po = Pokemons(p["Pokemon"])
         x, y, z = po.pos[0], po.pos[1], po.pos[2]
-        po.pos = SimpleNamespace(x=my_scale(float(x), x=True),
-                                 y=my_scale(float(y), y=True, z=my_scale(float(z), z=True)))
+        # po.pos = SimpleNamespace(x=my_scale(float(x), x=True),
+        #                          y=my_scale(float(y), y=True, z=my_scale(float(z), z=True)))
         po.cal_edges(g)
         pokemons.append(po)
+    print(pokemons)
     pokemons.sort(key=lambda a: a.value, reverse=True)  # sort by value
 
 
@@ -225,27 +226,27 @@ while client.is_running() == 'true':
     # draw pokemons (note: should differ (GUI wise) between the up and the down pokemons (currently they are marked in the same way).
     for p in pokemons:
         if p.value == 5:
-            screen.blit(Squirtle, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Squirtle, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value == 6:
-            screen.blit(Bulbasaur, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Bulbasaur, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value == 7:
-            screen.blit(Jigglypuff, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Jigglypuff, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value == 8:
-            screen.blit(Eevee, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Eevee, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value == 9:
-            screen.blit(Zapdos, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Zapdos, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value == 10:
-            screen.blit(Totodile, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Totodile, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value == 11:
-            screen.blit(Typhlosion, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Typhlosion, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value == 12:
-            screen.blit(Venusaur, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Venusaur, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value == 13:
-            screen.blit(Charizard, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Charizard, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value == 14:
-            screen.blit(Pyroar, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Pyroar, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
         elif p.value >= 15:
-            screen.blit(Pikachu, (int(p.pos.x), int(p.pos.y)))
+            screen.blit(Pikachu, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
 
     # update screen changes
     display.update()
@@ -256,8 +257,14 @@ while client.is_running() == 'true':
     # choose next edge
 
     for p in pokemons:
-        agent = graph.choose_agent(agents, p)
-        next_node = p.dest
+        if p.src is None:
+            continue
+        a = graph.choose_agent(agents, p)
+        agent = a[0]
+        l = a[1]
+        l.append(p.dest)
+        next_node = l[1]
+        print(l)
         client.choose_next_edge(
             '{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
         ttl = client.time_to_end()
