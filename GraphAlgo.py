@@ -12,7 +12,7 @@ from DiGraph import DiGraph, Node
 import matplotlib.pyplot as plt
 
 from GraphAlgoInterface import GraphAlgoInterface
-from PokemonsAndAgents import Agents, Pokemons
+from PokemonsAndAgents import Agents, Pokemons, AgePok
 
 
 class GraphAlgo(GraphAlgoInterface):
@@ -255,14 +255,12 @@ class GraphAlgo(GraphAlgoInterface):
 
         plt.show()
 
-    def choose_agent(self, agents: list[Agents], pokemon: Pokemons):
+    def choose_agent(self, agents: list[Agents], pokemon: Pokemons, agentPath: AgePok):
         a = None
         tmin = float('inf')
         p = []
         for agent in agents:
-            if len(agent.path) < 1:
-                agent.work = False
-            if agent.work or agent.dest != -1:
+            if agent.id in agentPath.age and agentPath.age[agent.id] != {} and len(agentPath.age[agent.id]) > 0:
                 continue
             short = self.shortest_path(agent.src, pokemon.src)
             dist = short[0]
@@ -275,9 +273,7 @@ class GraphAlgo(GraphAlgoInterface):
                 a = agent
                 p = short[1]
         if a is not None:
-            a.path = p
-            a.path.append(pokemon.dest)
-            a.work = True
-            print(a.id, ":", a.path)
+            agentPath.age[a.id] = p
+            agentPath.age[a.id].append(pokemon.dest)
         return a, p
 
