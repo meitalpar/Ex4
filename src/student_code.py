@@ -11,13 +11,16 @@ import json
 from pygame import gfxdraw
 import pygame
 from pygame import *
-
+import subprocess
 
 # init pygame
 from GraphAlgo import GraphAlgo
 from PokemonsAndAgents import Pokemons, Agents
 
 
+
+#run server
+# subprocess.Popen(["powershell.exe","java -jar Ex4_Server_v0.0.jar 5"])
 
 WIDTH, HEIGHT = 1080, 720
 
@@ -135,9 +138,9 @@ radius = 15
 client.add_agent("{\"id\":0}")
 
 
-# client.add_agent("{\"id\":1}")
-# client.add_agent("{\"id\":2}")
-# client.add_agent("{\"id\":3}")
+client.add_agent("{\"id\":1}")
+client.add_agent("{\"id\":2}")
+client.add_agent("{\"id\":3}")
 
 # this commnad starts the server - the game is running now
 # calculate edges:
@@ -164,8 +167,8 @@ while client.is_running() == 'true':
         # po.pos = SimpleNamespace(x=my_scale(float(x), x=True),
         #                          y=my_scale(float(y), y=True, z=my_scale(float(z), z=True)))
         po.cal_edges(g)
+        # po.chosen = False
         pokemons.append(po)
-    print(pokemons)
     pokemons.sort(key=lambda a: a.value, reverse=True)  # sort by value
 
 
@@ -259,14 +262,31 @@ while client.is_running() == 'true':
     for p in pokemons:
         if p.src is None:
             continue
-        a = graph.choose_agent(agents, p)
-        agent = a[0]
-        l = a[1]
-        l.append(p.dest)
-        next_node = l[1]
-        print(l)
-        client.choose_next_edge(
-            '{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
+        chosen = False
+        for agent in agents:
+            if len(agent.path) > 0:
+                for i in agent.path:
+                    if p.dest == i:
+                        chosen = True
+                        break
+            if chosen:
+                break
+        if chosen:
+            continue
+        q = graph.choose_agent(agents, p)
+
+        for agent in agents:
+            if agent.work and agent.dest == -1:
+
+                next_node = agent.path[0]
+                agent.path.remove(next_node)
+                client.choose_next_edge(
+                    '{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
+        # l = a[1]
+        # l.append(p.dest)
+        # next_node = l[1]
+        # client.choose_next_edge(
+        #     '{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
         ttl = client.time_to_end()
 
     client.move()

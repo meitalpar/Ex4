@@ -50,6 +50,8 @@ class Agents:
         self.speed = dict["speed"]
         s = dict["pos"]
         self.pos = s.split(",")
+        self.work = False
+        self.path = []
 
     def __repr__(self):
         return f'Agents: id: {self.id}, value: {self.value}, src: {self.src}, dest: {self.dest},' \

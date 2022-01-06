@@ -260,6 +260,10 @@ class GraphAlgo(GraphAlgoInterface):
         tmin = float('inf')
         p = []
         for agent in agents:
+            if len(agent.path) < 1:
+                agent.work = False
+            if agent.work or agent.dest != -1:
+                continue
             short = self.shortest_path(agent.src, pokemon.src)
             dist = short[0]
             agedis = math.sqrt(pow(agent.pos.x - self.graph.nodes[agent.src].pos.x, 2) +
@@ -270,5 +274,10 @@ class GraphAlgo(GraphAlgoInterface):
                 tmin = t
                 a = agent
                 p = short[1]
+        if a is not None:
+            a.path = p
+            a.path.append(pokemon.dest)
+            a.work = True
+            print(a.id, ":", a.path)
         return a, p
 
