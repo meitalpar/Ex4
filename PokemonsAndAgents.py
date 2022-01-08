@@ -60,4 +60,4 @@ class Agents:
 class AgePok:
     def __init__(self):
         self.age = {}
-        self.edgeval = tuple() # Edge Value - all pokemons on the same edge
+        self.edgeval = tuple()  # Edge Value - all pokemons on the same edge

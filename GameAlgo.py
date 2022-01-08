@@ -1,9 +1,7 @@
 import json
-import math
 from types import SimpleNamespace
-import time
 
-from PokemonsAndAgents import Pokemons, Agents, AgePok
+from PokemonsAndAgents import Pokemons, Agents
 
 
 class GameAlgo():

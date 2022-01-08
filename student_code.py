@@ -3,16 +3,11 @@
 OOP - Ex4
 Very simple GUI example for python client to communicates with the server and "play the game!"
 """
-import math
 import os
-import time
-from collections import OrderedDict
-from operator import itemgetter
 from types import SimpleNamespace
 
 import json
 
-import crimson as crimson
 from pygame import gfxdraw
 import pygame
 from pygame import *
@@ -25,7 +20,7 @@ import subprocess
 from GameAlgo import GameAlgo
 from Images import Button, PokemonImages, AgentsImages
 from GraphAlgo import GraphAlgo
-from PokemonsAndAgents import Agents, Pokemons, AgePok
+from PokemonsAndAgents import AgePok
 from client import Client
 
 subprocess.Popen(["powershell.exe", "java -jar Ex4_Server_v0.0.jar 5"])
