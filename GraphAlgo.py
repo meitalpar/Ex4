@@ -255,25 +255,25 @@ class GraphAlgo(GraphAlgoInterface):
 
         plt.show()
 
-    def choose_agent(self, agents: list[Agents], pokemon: Pokemons, agentPath: AgePok):
-        a = None
-        tmin = float('inf')
-        p = []
-        for agent in agents:
-            if agent.id in agentPath.age and agentPath.age[agent.id] != {} and len(agentPath.age[agent.id]) > 0:
-                continue
-            short = self.shortest_path(agent.src, pokemon.src)
-            dist = short[0]
-            agedis = math.sqrt(pow(agent.pos.x - self.graph.nodes[agent.src].pos.x, 2) +
-                               pow(self.graph.nodes[agent.src].pos.y - agent.pos.y, 2))
-            dist += pokemon.dis - agedis
-            t = dist / agent.speed
-            if t < tmin:
-                tmin = t
-                a = agent
-                p = short[1]
-        if a is not None:
-            agentPath.age[a.id] = p
-            agentPath.age[a.id].append(pokemon.dest)
-        return a, p
+    # def choose_agent(self, agents: list[Agents], pokemon: [], agentPath: AgePok):
+    #     a = None
+    #     tmin = float('inf')
+    #     path = []
+    #     for agent in agents:
+    #         if agent.id in agentPath.age and agentPath.age[agent.id] != {} and len(agentPath.age[agent.id]) > 0:
+    #             continue
+    #         short = self.shortest_path(agent.src, pokemon[0][0])
+    #         dist = short[0]
+    #         agedis = math.sqrt(pow(agent.pos.x - self.graph.nodes[agent.src].pos.x, 2) +
+    #                            pow(self.graph.nodes[agent.src].pos.y - agent.pos.y, 2))
+    #         dist -= agedis
+    #         t = dist / agent.speed
+    #         if t < tmin:
+    #             tmin = t
+    #             a = agent
+    #             path = short[1]
+    #     if a is not None:
+    #         agentPath.age[a.id] = path
+    #         agentPath.age[a.id].append(pokemon[0][1])
+    #     return True
 

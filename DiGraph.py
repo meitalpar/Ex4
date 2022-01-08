@@ -12,6 +12,7 @@ class Node:
         self.edgeout = 0  # for get_all_v
         self.edgein = 0  # for get_all_v
 
+
     def getid(self):
         return self.id
 

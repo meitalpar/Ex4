@@ -5,9 +5,14 @@ Very simple GUI example for python client to communicates with the server and "p
 """
 import math
 import os
+import time
+from collections import OrderedDict
+from operator import itemgetter
 from types import SimpleNamespace
 
 import json
+
+import crimson as crimson
 from pygame import gfxdraw
 import pygame
 from pygame import *
@@ -17,11 +22,13 @@ import subprocess
 
 
 # run server
+from GameAlgo import GameAlgo
+from Images import Button, PokemonImages, AgentsImages
 from GraphAlgo import GraphAlgo
 from PokemonsAndAgents import Agents, Pokemons, AgePok
 from client import Client
 
-subprocess.Popen(["powershell.exe", "java -jar Ex4_Server_v0.0.jar 14"])
+subprocess.Popen(["powershell.exe", "java -jar Ex4_Server_v0.0.jar 5"])
 
 WIDTH, HEIGHT = 1080, 720
 
@@ -37,64 +44,22 @@ pygame.font.init()
 
 client = Client()
 client.start_connection(HOST, PORT)
-# Coope:
-# COOPER_IMAGE = pygame.image.load(
-#     os.path.join('data', 'Cooper.png'))
-# COOPER = pygame.transform.scale(
-#     COOPER_IMAGE, (50, 50))
-# Pikachu:
-Pikachu_IMAGE = pygame.image.load(os.path.join('img', 'Pikachu.png'))
-Pikachu = pygame.transform.scale(Pikachu_IMAGE, (50, 50))
-# Charizard:
-Charizard_IMAGE = pygame.image.load(os.path.join('img', 'Charizard.png'))
-Charizard = pygame.transform.scale(Charizard_IMAGE, (50, 50))
-# Jigglypuff:
-Jigglypuff_IMAGE = pygame.image.load(os.path.join('img', 'Jigglypuff.png'))
-Jigglypuff = pygame.transform.scale(Jigglypuff_IMAGE, (50, 50))
-# Bulbasaur:
-Bulbasaur_IMAGE = pygame.image.load(os.path.join('img', 'Bulbasaur.png'))
-Bulbasaur = pygame.transform.scale(Bulbasaur_IMAGE, (50, 50))
-# Squirtle:
-Squirtle_IMAGE = pygame.image.load(os.path.join('img', 'Squirtle.png'))
-Squirtle = pygame.transform.scale(Squirtle_IMAGE, (50, 50))
-# Venusaur:
-Venusaur_IMAGE = pygame.image.load(os.path.join('img', 'Venusaur.png'))
-Venusaur = pygame.transform.scale(Venusaur_IMAGE, (50, 50))
-# Typhlosion:
-Typhlosion_IMAGE = pygame.image.load(os.path.join('img', 'Typhlosion.png'))
-Typhlosion = pygame.transform.scale(Typhlosion_IMAGE, (50, 50))
-# Zapdos:
-Zapdos_IMAGE = pygame.image.load(os.path.join('img', 'Zapdos.png'))
-Zapdos = pygame.transform.scale(Zapdos_IMAGE, (50, 50))
-# Totodile:
-Totodile_IMAGE = pygame.image.load(os.path.join('img', 'Totodile.png'))
-Totodile = pygame.transform.scale(Totodile_IMAGE, (50, 50))
-# Pyroar:
-Pyroar_IMAGE = pygame.image.load(os.path.join('img', 'Pyroar.png'))
-Pyroar = pygame.transform.scale(Pyroar_IMAGE, (50, 50))
-# Eevee:
-Eevee_IMAGE = pygame.image.load(os.path.join('img', 'Eevee.png'))
-Eevee = pygame.transform.scale(Eevee_IMAGE, (50, 50))
-
+stop_button = Button()
+pokemonsimg = PokemonImages()
+agentsimg = AgentsImages()
+game = GameAlgo()
+agentPath = AgePok()
 # Map:
 MAP_IMAGE = pygame.image.load(os.path.join('img', 'map.png'))
 MAP = pygame.transform.scale(MAP_IMAGE, (screen.get_width(), screen.get_height()))
 
-ME_IMAGE = pygame.image.load(
-    os.path.join('img', 'ME.png'))
-ME = pygame.transform.scale(
-    ME_IMAGE, (50, 60))
-
+# Create Graph
 graph_json = client.get_graph()
-
-FONT = pygame.font.SysFont('Arial', 20, bold=True)
-# load the json string into SimpleNamespace Object
-
-string = json.loads(
-    graph_json, object_hook=lambda json_dict: SimpleNamespace(**json_dict))
 graph = GraphAlgo()
 g = graph.graph
 graph.load_from_json(graph_json)
+
+FONT = pygame.font.SysFont('Arial', 20, bold=True)
 
 for n in g.nodes.keys():
     x, y, z = g.nodes[n].pos
@@ -105,14 +70,10 @@ min_x = min(g.nodes.keys(), key=lambda n: g.nodes[n].pos.x)
 min_x = g.nodes[min_x].pos.x
 min_y = min(g.nodes.keys(), key=lambda n: g.nodes[n].pos.y)
 min_y = g.nodes[min_y].pos.y
-min_z = min(g.nodes.keys(), key=lambda n: g.nodes[n].pos.z)
-min_z = g.nodes[min_z].pos.z
 max_x = max(g.nodes.keys(), key=lambda n: g.nodes[n].pos.x)
 max_x = g.nodes[max_x].pos.x
 max_y = max(g.nodes.keys(), key=lambda n: g.nodes[n].pos.y)
 max_y = g.nodes[max_y].pos.y
-max_z = max(g.nodes.keys(), key=lambda n: g.nodes[n].pos.z)
-max_z = g.nodes[max_z].pos.z
 
 
 def scale(data, min_screen, max_screen, min_data, max_data):
@@ -124,29 +85,26 @@ def scale(data, min_screen, max_screen, min_data, max_data):
 
 
 # decorate scale with the correct values
-
 def my_scale(data, x=False, y=False, z=False):
     if x:
         return scale(data, 50, screen.get_width() - 50, min_x, max_x)
     if y:
         return scale(data, 50, screen.get_height() - 50, min_y, max_y)
-    # if z:
-    #     return scale(data, 50, screen.get_height() - 50, min_z, max_z)
 
+
+so2 = game.pokemons(client, g)[0]
 
 radius = 15
+s1 = "{\"id\":"
+s2 = "}"
+for i in range(int(json.loads(client.get_info())["GameServer"]["agents"])):
+    if i < len(so2):
+        client.add_agent(f"{s1}{so2[i][0][0]}{s2}")
+    else:
+        client.add_agent(f"{s1}{so2[0][0][0]}{s2}")
 
-client.add_agent("{\"id\":0}")
-client.add_agent("{\"id\":1}")
-client.add_agent("{\"id\":2}")
-client.add_agent("{\"id\":3}")
 
 # this commnad starts the server - the game is running now
-# calculate edges:
-
-
-agentPath = AgePok()
-
 client.start()
 
 """
@@ -154,41 +112,19 @@ The code below should be improved significantly:
 The GUI and the "algo" are mixed - refactoring using MVC design pattern is required.
 """
 while client.is_running() == 'true':
-    # screen.blit(MAP, (0, 0))
     screen.blit(pygame.transform.scale(MAP, screen.get_rect().size), (0, 0))
+
     # Pokemons:
-    pokemons = []
-    pokemonss = client.get_pokemons()
-    pokemonsss = json.loads(pokemonss)
-    for p in pokemonsss["Pokemons"]:
-        po = Pokemons(p["Pokemon"])
-        x, y, z = po.pos[0], po.pos[1], po.pos[2]
-        # po.pos = SimpleNamespace(x=my_scale(float(x), x=True),
-        #                          y=my_scale(float(y), y=True, z=my_scale(float(z), z=True)))
-        po.cal_edges(g)
-        # po.chosen = False
-        pokemons.append(po)
-    pokemons.sort(key=lambda a: a.value, reverse=True)  # sort by value
+    so, pokemons = game.pokemons(client, g)
 
     # Agents:
-    agents = []
-    agentss = client.get_agents()
-    agee = json.loads(agentss)
-    for a in agee["Agents"]:
-        agen = Agents(a["Agent"])
-        x, y, z = agen.pos[0], agen.pos[1], agen.pos[2]
-        agen.pos = SimpleNamespace(x=my_scale(float(x), x=True),
-                                   y=my_scale(float(y), y=True, z=my_scale(float(z), z=True)))
-        agents.append(agen)
-    agents.sort(key=lambda a: a.speed, reverse=True)  # sort by speed
+    agents = game.agents(client, my_scale)
+
     # check events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit(0)
-
-    # refresh surface
-    # screen.fill(Color(0, 0, 0))
 
     # draw nodes
     for n in g.nodes.keys():
@@ -208,47 +144,33 @@ while client.is_running() == 'true':
         screen.blit(id_srf, rect)
 
     # draw edges
-    for v in g.nodes.keys():
-        # x, y, z = g.nodes[v].pos
-        for u in g.edges[g.nodes[v].id]:
-            # scaled positions
-            src_x = my_scale(g.nodes[v].pos.x, x=True)
-            src_y = my_scale(g.nodes[v].pos.y, y=True)
-            dest_x = my_scale(g.nodes[u].pos.x, x=True)
-            dest_y = my_scale(g.nodes[u].pos.y, y=True)
+    # for v in g.nodes.keys():
+    #     # x, y, z = g.nodes[v].pos
+    #     for u in g.edges[g.nodes[v].id]:
+    #         # scaled positions
+    #         src_x = my_scale(g.nodes[v].pos.x, x=True)
+    #         src_y = my_scale(g.nodes[v].pos.y, y=True)
+    #         dest_x = my_scale(g.nodes[u].pos.x, x=True)
+    #         dest_y = my_scale(g.nodes[u].pos.y, y=True)
 
             # draw the line
-            pygame.draw.line(screen, Color(61, 72, 126),
-                             (src_x, src_y), (dest_x, dest_y))
+            # pygame.draw.line(screen, Color(61, 72, 126),
+            #                  (src_x, src_y), (dest_x, dest_y))
+
+    # draw time
+    timeleft = float(client.time_to_end()) / 1000
+    timelabel = FONT.render(f"Time Left: {int(timeleft)}", True, (0, 0, 0))
+    rect = timelabel.get_rect(center=(110, 10))
+    screen.blit(timelabel, rect)
 
     # draw agents
-    for agent in agents:
-        screen.blit(ME, (int(agent.pos.x), int(agent.pos.y)))
-    # draw pokemons (note: should differ (GUI wise) between the up and the down pokemons (currently they are marked in the same way).
-    for p in pokemons:
-        if p.value == 5:
-            screen.blit(Squirtle, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value == 6:
-            screen.blit(Bulbasaur, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value == 7:
-            screen.blit(Jigglypuff, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value == 8:
-            screen.blit(Eevee, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value == 9:
-            screen.blit(Zapdos, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value == 10:
-            screen.blit(Totodile, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value == 11:
-            screen.blit(Typhlosion, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value == 12:
-            screen.blit(Venusaur, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value == 13:
-            screen.blit(Charizard, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value == 14:
-            screen.blit(Pyroar, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
-        elif p.value >= 15:
-            screen.blit(Pikachu, (int(my_scale(float(p.pos[0]), x=True)), int(my_scale(float(p.pos[1]), y=True))))
+    agentsimg.draw(screen, agents)
 
+    # draw pokemons
+    pokemonsimg.draw(screen, pokemons, my_scale)
+
+    if stop_button.draw(screen):
+        client.stop()
     # update screen changes
     display.update()
 
@@ -256,31 +178,8 @@ while client.is_running() == 'true':
     clock.tick(60)
 
     # choose next edge
-
-        # print(agentPath.age[agent.id])
-
-    for agent in agents:
-        if agent.id not in agentPath.age:
-            for p in pokemons:
-                if p.src is None:
-                    continue
-                graph.choose_agent(agents, p, agentPath)
-                print("First")
-        if agent.id in agentPath.age and agentPath.age[agent.id] == {} or len(
-                agentPath.age[agent.id]) == 0:
-            for p in pokemons:
-                if p.src is None:
-                    continue
-                graph.choose_agent(agents, p, agentPath)
-                print("second")
-        if agent.src == agentPath.age[agent.id][0]:
-            agentPath.age[agent.id].remove(agent.src)
-        if agent.id in agentPath.age and agentPath.age[agent.id] != {} and len(
-                agentPath.age[agent.id]) > 0:
-            next_node = agentPath.age[agent.id][0]
-            client.choose_next_edge(
-                '{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
-        ttl = client.time_to_end()
+    game.run(client, agents, agentPath, graph, so)
     client.move()
+    ttl = client.time_to_end()
 
 # game over:
